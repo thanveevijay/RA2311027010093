@@ -1,5 +1,5 @@
 const express = require("express");
-const Log = require("../logging_middleware/logger");
+const Log = require("../logging_middleware/log");
 const { getDepots, getVehicles } = require("./api");
 const { selectTasks } = require("./scheduler");
 
