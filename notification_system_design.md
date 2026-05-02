@@ -1,91 +1,189 @@
 # Notification System Design
 
-## Overview
-The Notification System is designed to inform users about important events such as vehicle maintenance scheduling. It ensures timely communication between backend services and users by generating notifications whenever key actions occur.
+---
 
-## Objective
-- Notify users about vehicle maintenance events
-- Provide a simple and scalable notification mechanism
-- Integrate logging for tracking system activity
+## Stage 1: API Design
 
-## Components
-1. Vehicle Maintenance Scheduler  
-   - Generates events when maintenance is scheduled  
+### Core Features
+- Send notification
+- Get user notifications
+- Mark notification as read
 
-2. Logging Middleware  
-   - Logs important system activities  
+---
 
-3. Notification Service (Backend)  
-   - Handles notification creation and retrieval  
+### 1. Send Notification
 
-## Workflow
-1. A vehicle is added to the system  
-2. Maintenance is scheduled  
-3. Logging middleware records the event  
-4. A notification is generated for the user  
+POST /notify
 
-## API Endpoints
-
-### POST /notify
-Creates a new notification
-
-Request Body:
+Request:
 {
-  "user": "V1",
+  "userId": "123",
   "message": "Vehicle Maintenance Due!"
 }
 
 Response:
 {
-  "message": "Notification sent successfully",
+  "message": "Notification sent",
   "data": {
-    "id": "unique_id",
-    "user": "V1",
+    "id": "notif123",
+    "userId": "123",
     "message": "Vehicle Maintenance Due!"
   }
 }
 
 ---
 
-### GET /notifications
-Fetches all notifications
+### 2. Get Notifications
+
+GET /notifications/:userId
 
 Response:
 {
-  "count": 1,
-  "data": [
+  "notifications": [
     {
-      "id": "unique_id",
-      "user": "V1",
-      "message": "Vehicle Maintenance Due!"
+      "id": "notif123",
+      "message": "Vehicle Maintenance Due!",
+      "isRead": false
     }
   ]
 }
 
-## Design Decisions
-- Used in-memory storage for simplicity and fast implementation  
-- Implemented REST APIs using Express.js  
-- Integrated logging middleware across all operations  
-- Maintained modular architecture for scalability  
+---
 
-## Error Handling
-- Validates required fields (user, message)  
-- Returns appropriate HTTP status codes  
-- Handles failures gracefully without crashing the application  
+### 3. Mark as Read
 
-## Logging Integration
-- Logs key operations such as:
-  - Notification creation  
-  - Invalid input handling  
-  - Data retrieval  
+PUT /notifications/:id/read
 
-## Note on Logging
-Logging API calls may return "Invalid authorization token" because different backend services run as separate processes and do not share authentication tokens.
-However, logging is implemented correctly and handled safely without affecting core application functionality.
+Response:
+{
+  "message": "Marked as read"
+}
 
-## Future Enhancements
-- Add email and SMS notification support  
-- Use message queues (Kafka/RabbitMQ) for scalability  
-- Store notifications in a database  
-- Implement authentication and authorization  
-- Enable real-time notifications using WebSockets  
+---
+
+### Real-Time Mechanism
+- WebSockets OR Firebase Cloud Messaging (FCM)
+
+---
+
+## Stage 2: Database Design
+
+### DB Choice
+- MongoDB (NoSQL)
+
+### Schema
+
+notifications:
+{
+  _id,
+  userId,
+  message,
+  isRead,
+  createdAt
+}
+
+### Queries
+
+Insert:
+db.notifications.insertOne({...})
+
+Fetch:
+db.notifications.find({ userId: "123", isRead: false })
+
+---
+
+## Stage 3: Performance Issue Fix
+
+Problem:
+- Slow query due to full scan
+
+Solution:
+- Add Index
+
+db.notifications.createIndex({ userId: 1, isRead: 1, createdAt: -1 })
+
+---
+
+## Stage 4: Scalability Improvements
+
+Problems:
+- DB overload
+
+Solutions:
+- Pagination (limit 10)
+- Caching (Redis)
+- Lazy loading
+
+Tradeoffs:
+- Cache = faster but memory usage
+- Pagination = less load but partial data
+
+---
+
+## Stage 5: Reliable Notification System
+
+### Problems
+- Email failure
+- No retry
+- Tight coupling
+
+---
+
+### Improved Design
+- Use Queue (RabbitMQ / Kafka)
+- Retry mechanism
+- Separate services
+
+---
+
+### Updated Pseudocode
+
+function notify_all(student_ids, message):
+    for id in student_ids:
+        queue.push({ id, message })
+
+worker:
+    process(queue):
+        send_email()
+        save_db()
+        push_app()
+
+---
+
+## Stage 6: Top N Notifications (Priority Logic)
+
+### Logic
+Priority = Impact + Recency
+
+---
+
+### Code (JavaScript)
+
+function getTopNotifications(notifications, n=10) {
+    return notifications
+        .sort((a, b) => {
+            return (b.impact + b.time) - (a.impact + a.time);
+        })
+        .slice(0, n);
+}
+
+---
+
+### Handling New Notifications
+- Use Min Heap (size = 10)
+- Replace lowest priority when new arrives
+
+---
+
+### API Used
+GET http://20.207.122.201/evaluation-service/notifications
+
+---
+
+## Conclusion
+
+- Designed scalable notification system
+- Optimized DB queries
+- Added real-time support
+- Ensured reliability with queues
+- Efficient top-N selection implemented
