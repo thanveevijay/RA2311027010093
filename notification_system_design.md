@@ -1,189 +1,98 @@
-# Notification System Design
+Notification System Design
+1. Introduction
 
----
+The Notification System is designed to deliver messages to users in a reliable, efficient, and scalable manner. It supports multiple communication channels such as in-app notifications, email, and SMS.
 
-## Stage 1: API Design
+The system follows an asynchronous, distributed architecture to handle high volumes of requests while ensuring performance, fault tolerance, and flexibility.
 
-### Core Features
-- Send notification
-- Get user notifications
-- Mark notification as read
+2. System Architecture
 
----
+The system adopts a microservices-based architecture, enabling independent scaling and modular development. The key layers include:
 
-### 1. Send Notification
+Client (Frontend): Initiates notification requests.
+Backend API: Handles incoming requests and coordinates processing.
+Message Queue: Acts as an intermediary for asynchronous communication.
+Worker Services: Responsible for actual notification delivery.
+Database: Maintains system data and delivery records.
 
-POST /notify
+This decoupled design improves scalability and reliability.
 
-Request:
-{
-  "userId": "123",
-  "message": "Vehicle Maintenance Due!"
-}
+3. Core Components
+3.1 API Service
 
-Response:
-{
-  "message": "Notification sent",
-  "data": {
-    "id": "notif123",
-    "userId": "123",
-    "message": "Vehicle Maintenance Due!"
-  }
-}
+The API Service acts as the entry point for all notification requests. Its responsibilities include:
 
----
+Validating incoming requests
+Processing user input
+Enqueuing messages into the message queue
+Logging request and response details
+3.2 Message Queue
 
-### 2. Get Notifications
+Technologies such as Kafka or RabbitMQ are used to manage asynchronous communication.
 
-GET /notifications/:userId
+Decouples request handling from processing
+Handles high traffic efficiently
+Ensures message durability and reliability
+3.3 Worker Services
 
-Response:
-{
-  "notifications": [
-    {
-      "id": "notif123",
-      "message": "Vehicle Maintenance Due!",
-      "isRead": false
-    }
-  ]
-}
+Worker services consume messages from the queue and perform the actual delivery.
 
----
+Process queued messages
+Send notifications through:
+Email services
+SMS gateways
+Push notification systems
+3.4 Database
 
-### 3. Mark as Read
+The database stores all relevant system data:
 
-PUT /notifications/:id/read
+User notification preferences
+Notification history
+Delivery status and logs
+4. Data Flow
 
-Response:
-{
-  "message": "Marked as read"
-}
+The notification lifecycle follows these steps:
 
----
+A user or system triggers a notification request
+The API receives and validates the request
+The request is pushed into the message queue
+Worker services retrieve the message
+The notification is sent via the appropriate channel
+Delivery status is recorded in the database
+5. Scalability
 
-### Real-Time Mechanism
-- WebSockets OR Firebase Cloud Messaging (FCM)
+The system is designed to scale efficiently under heavy load:
 
----
+Horizontal scaling of API and worker services
+Load balancing across multiple API instances
+Queue-based buffering to handle traffic spikes
+Stateless backend design for easy scaling
+6. Fault Tolerance
 
-## Stage 2: Database Design
+To ensure reliability, the system incorporates:
 
-### DB Choice
-- MongoDB (NoSQL)
+Automatic retry mechanisms for failed notifications
+Dead-letter queues for unprocessed messages
+Continuous monitoring and logging for debugging
+7. Logging and Monitoring
 
-### Schema
+Logging middleware is integrated to provide visibility into system behavior:
 
-notifications:
-{
-  _id,
-  userId,
-  message,
-  isRead,
-  createdAt
-}
+Tracks API requests and responses
+Captures errors and failures
+Monitors system performance
 
-### Queries
+Examples:
 
-Insert:
-db.notifications.insertOne({...})
+Info logs for successful operations
+Error logs for failed deliveries
+8. Security
 
-Fetch:
-db.notifications.find({ userId: "123", isRead: false })
+The system implements strong security practices:
 
----
+Token-based authentication (e.g., JWT)
+Secure API endpoints
+Encryption of sensitive data
+9. Conclusion
 
-## Stage 3: Performance Issue Fix
-
-Problem:
-- Slow query due to full scan
-
-Solution:
-- Add Index
-
-db.notifications.createIndex({ userId: 1, isRead: 1, createdAt: -1 })
-
----
-
-## Stage 4: Scalability Improvements
-
-Problems:
-- DB overload
-
-Solutions:
-- Pagination (limit 10)
-- Caching (Redis)
-- Lazy loading
-
-Tradeoffs:
-- Cache = faster but memory usage
-- Pagination = less load but partial data
-
----
-
-## Stage 5: Reliable Notification System
-
-### Problems
-- Email failure
-- No retry
-- Tight coupling
-
----
-
-### Improved Design
-- Use Queue (RabbitMQ / Kafka)
-- Retry mechanism
-- Separate services
-
----
-
-### Updated Pseudocode
-
-function notify_all(student_ids, message):
-    for id in student_ids:
-        queue.push({ id, message })
-
-worker:
-    process(queue):
-        send_email()
-        save_db()
-        push_app()
-
----
-
-## Stage 6: Top N Notifications (Priority Logic)
-
-### Logic
-Priority = Impact + Recency
-
----
-
-### Code (JavaScript)
-
-function getTopNotifications(notifications, n=10) {
-    return notifications
-        .sort((a, b) => {
-            return (b.impact + b.time) - (a.impact + a.time);
-        })
-        .slice(0, n);
-}
-
----
-
-### Handling New Notifications
-- Use Min Heap (size = 10)
-- Replace lowest priority when new arrives
-
----
-
-### API Used
-GET http://20.207.122.201/evaluation-service/notifications
-
----
-
-## Conclusion
-
-- Designed scalable notification system
-- Optimized DB queries
-- Added real-time support
-- Ensured reliability with queues
-- Efficient top-N selection implemented
+The Notification System is a robust, scalable, and fault-tolerant solution designed for modern applications. By leveraging asynchronous processing, modular architecture, and efficient resource management, it ensures reliable delivery of notifications across multiple channels.
