@@ -1,9 +1,7 @@
 Car Maintenance Scheduler and Tracking System
 1. Introduction
 
-The Car Maintenance Scheduler and Tracking System is a backend-focused solution designed to optimize vehicle servicing operations. It intelligently schedules maintenance tasks based on constraints such as available time and service impact.
-
-The system demonstrates real-world backend engineering concepts including centralized logging, fault-tolerant API integration, and algorithm-based optimization using the 0/1 Knapsack approach.
+The Car Maintenance Scheduler and Tracking System is a backend-focused solution designed to optimize vehicle servicing operations. It intelligently schedules maintenance tasks based on constraints such as available time and service impact. The system demonstrates real-world backend engineering concepts including centralized logging, fault-tolerant API integration, and algorithm-based optimization using the 0/1 Knapsack approach.
 
 2. System Objectives
 
