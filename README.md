@@ -39,7 +39,7 @@ Fallback to mock data
 your-roll-number/
 │
 ├── logging_middleware/
-│   └── logger.js
+│   └── log.js
 │
 ├── notification_app_be/
 │   ├── server.js
