@@ -10,6 +10,9 @@ const TOKEN = process.env.EXTERNAL_API_TOKEN;
 
 app.get("/schedule", async (req, res) => {
   try {
+    if (!TOKEN) {
+      return res.status(503).json({ error: "External API is not configured. Set EXTERNAL_API_TOKEN." });
+    }
     await Log("backend", "info", "route", "Schedule API called");
 
     const depots = await getDepots(TOKEN);
@@ -47,7 +50,9 @@ app.get("/schedule", async (req, res) => {
   }
 });
 
-app.listen(3000, async () => {
-  console.log("Server running on port 3000");
+const PORT = Number(process.env.PORT) || 3000;
+
+app.listen(PORT, async () => {
+  console.log(`Server running on port ${PORT}`);
   await Log("backend", "info", "service", "Backend started");
 });
